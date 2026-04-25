@@ -1,0 +1,177 @@
+<div class="rules-page">
+  <div class="page-header">
+    <h2>Gestión de Reglas</h2>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="openCreate()">+ Añadir regla</button>
+    </div>
+  </div>
+
+  @if (error()) {
+    <div class="alert-banner alert-error" style="margin:16px">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="loading">Cargando reglas...</div>
+  } @else {
+
+    <!-- Tabla (escritorio) -->
+    <div class="table-wrap desktop-only">
+      <table>
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Descripción</th>
+            <th>Severidad</th>
+            <th>Estado</th>
+            <th>Última modificación</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (rule of rules(); track rule.id) {
+            <tr>
+              <td class="td-name">{{ rule.rule_name }}</td>
+              <td class="td-desc">{{ rule.description ?? '—' }}</td>
+              <td>
+                <span [class]="severityClass(rule.severity?.name ?? severityNameById(rule.severity_id))">
+                  <span class="dot"></span>
+                  {{ severityLabel(rule.severity?.name ?? severityNameById(rule.severity_id)) }}
+                </span>
+              </td>
+              <td>
+                <label class="toggle">
+                  <input type="checkbox" [checked]="rule.enabled" (change)="toggleEnabled(rule)" />
+                  <span class="slider"></span>
+                </label>
+              </td>
+              <td class="td-time">{{ rule.updated_at | date:'dd/MM/yy' }}</td>
+              <td class="td-actions">
+                <button class="icon-btn" title="Editar" (click)="openEdit(rule)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+                <button class="icon-btn danger" title="Eliminar" (click)="confirmDelete(rule.id)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3,6 5,6 21,6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6">
+              <div class="empty-state"><span class="empty-icon">⚙️</span><p>No hay reglas configuradas.</p></div>
+            </td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Tarjetas (móvil) -->
+    <div class="mobile-cards">
+      @for (rule of rules(); track rule.id) {
+        <div class="rule-card">
+          <div class="rule-card-top">
+            <div class="rule-card-info">
+              <span class="rule-card-name">{{ rule.rule_name }}</span>
+              <span [class]="severityClass(rule.severity?.name ?? severityNameById(rule.severity_id))">
+                <span class="dot"></span>
+                {{ severityLabel(rule.severity?.name ?? severityNameById(rule.severity_id)) }}
+              </span>
+            </div>
+            <label class="toggle" [title]="rule.enabled ? 'Desactivar regla' : 'Activar regla'">
+              <input type="checkbox" [checked]="rule.enabled" (change)="toggleEnabled(rule)" [attr.aria-label]="rule.enabled ? 'Desactivar regla' : 'Activar regla'" />
+              <span class="slider"></span>
+            </label>
+          </div>
+          @if (rule.description) {
+            <p class="rule-card-desc">{{ rule.description }}</p>
+          }
+          <div class="rule-card-actions">
+            <button type="button" class="btn btn-outline btn-sm" (click)="openEdit(rule)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+              Editar
+            </button>
+            <button type="button" class="btn btn-danger btn-sm" (click)="confirmDelete(rule.id)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3,6 5,6 21,6"/>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+              </svg>
+              Eliminar
+            </button>
+          </div>
+        </div>
+      } @empty {
+        <div class="empty-state"><span class="empty-icon">⚙️</span><p>No hay reglas configuradas.</p></div>
+      }
+    </div>
+  }
+</div>
+
+<!-- Create/Edit modal -->
+@if (modalMode()) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ modalMode() === 'create' ? 'Nueva regla' : 'Editar regla' }}</h3>
+        <span class="modal-close" (click)="closeModal()">✕</span>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Nombre de la regla *</label>
+          <input type="text" [(ngModel)]="form.rule_name" placeholder="bruteforce_detection" />
+        </div>
+        <div class="form-group">
+          <label>Descripción</label>
+          <input type="text" [(ngModel)]="form.description" placeholder="Describe qué detecta esta regla..." />
+        </div>
+        <div class="form-group">
+          <label>Severidad *</label>
+          <select [(ngModel)]="form.severity_id">
+            @for (s of severityOptions; track s.id) {
+              <option [value]="s.id">{{ severityLabel(s.name) }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group form-check">
+          <label class="check-label">
+            <input type="checkbox" [(ngModel)]="form.enabled" />
+            Regla activa
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="closeModal()">Cancelar</button>
+        <button class="btn btn-primary" (click)="save()" [disabled]="saving() || !form.rule_name">
+          {{ saving() ? 'Guardando...' : 'Guardar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Delete confirm -->
+@if (deleteConfirm()) {
+  <div class="modal-overlay" (click)="cancelDelete()">
+    <div class="modal modal-sm" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Eliminar regla</h3>
+        <span class="modal-close" (click)="cancelDelete()">✕</span>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:14px; color: var(--text-muted)">
+          ¿Estás seguro de que quieres eliminar esta regla? Esta acción no se puede deshacer.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="cancelDelete()">Cancelar</button>
+        <button class="btn btn-danger" (click)="doDelete()">Eliminar</button>
+      </div>
+    </div>
+  </div>
+}

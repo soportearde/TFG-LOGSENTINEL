@@ -1,0 +1,108 @@
+<div class="dashboard">
+  @if (data()) {
+    <!-- Stats row -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Alertas Totales</div>
+        <div class="stat-value">
+          {{ data()!.alerts_total | number }}
+          <span class="stat-trend up">↑</span>
+        </div>
+      </div>
+      <div class="stat-card accent-red">
+        <div class="stat-label">Alertas Críticas</div>
+        <div class="stat-value">
+          <span class="stat-icon">⚠</span>
+          {{ data()!.alerts_by_level?.['critical'] | number }}
+        </div>
+      </div>
+      @if (data()!.active_rules !== undefined) {
+        <div class="stat-card accent-green">
+          <div class="stat-label">Reglas Activas</div>
+          <div class="stat-value">
+            <span class="stat-icon check">✓</span>
+            {{ data()!.active_rules }}
+          </div>
+        </div>
+      }
+      @if (data()!.total_users !== undefined) {
+        <div class="stat-card accent-blue">
+          <div class="stat-label">Usuarios</div>
+          <div class="stat-value">{{ data()!.total_users }}</div>
+        </div>
+      }
+      @if (data()!.raw_logs_today !== undefined) {
+        <div class="stat-card">
+          <div class="stat-label">Logs hoy</div>
+          <div class="stat-value">{{ data()!.raw_logs_today | number }}</div>
+        </div>
+      }
+    </div>
+
+    <!-- Main content grid -->
+    <div class="content-grid">
+      <!-- Recent alerts -->
+      <div class="card">
+        <div class="card-head">
+          <h3>Alertas Recientes</h3>
+          <a routerLink="/app/alerts" class="btn btn-outline btn-sm">Ver todas</a>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Severidad</th>
+                <th>Mensaje</th>
+                <th>IP Origen</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (alert of data()!.recent_alerts; track alert.id) {
+                <tr>
+                  <td>
+                    <span [class]="severityClass(alert.severity?.name)">
+                      <span class="dot"></span>
+                      {{ severityLabel(alert.severity?.name ?? '') }}
+                    </span>
+                  </td>
+                  <td class="cell-title">{{ alert.title }}</td>
+                  <td class="cell-mono">{{ alert.source_ip ?? '—' }}</td>
+                  <td class="cell-time">{{ alert.event_timestamp | date:'HH:mm:ss' }}</td>
+                </tr>
+              } @empty {
+                <tr><td colspan="4" class="empty-row">No hay alertas recientes.</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Severity chart -->
+      <div class="card">
+        <div class="card-head">
+          <h3>Alertas por Severidad</h3>
+        </div>
+        <div class="chart-area">
+          @for (bar of chartBars(); track bar.label) {
+            <div class="bar-group">
+              <div class="bar-label">{{ bar.value | number }}</div>
+              <div class="bar-track">
+                <div class="bar-fill" [class]="'bar-' + bar.cls" [style.height.%]="bar.pct"></div>
+              </div>
+              <div class="bar-name">{{ bar.label }}</div>
+            </div>
+          } @empty {
+            <p class="no-data">Sin datos de severidad.</p>
+          }
+        </div>
+      </div>
+    </div>
+  } @else {
+    <!-- Loading state -->
+    <div class="loading-dashboard">
+      <div class="loading-spinner"></div>
+      <p>Cargando dashboard...</p>
+    </div>
+  }
+</div>

@@ -1,0 +1,144 @@
+<div class="logs-page">
+  <div class="page-header">
+    <h2>Logs en bruto</h2>
+    @if (result()) {
+      <span class="header-count">{{ result()!.total }} registros</span>
+    }
+    <button type="button" class="filter-toggle-btn" [class.active]="filtersOpen() || isFiltered()" (click)="toggleFilters()" aria-label="Filtros">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+      </svg>
+      @if (isFiltered()) {
+        <span class="filter-active-dot"></span>
+      }
+    </button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filter-bar" [class.filter-open]="filtersOpen()">
+    <div class="search-wrap">
+      <svg class="search-icon" viewBox="0 0 20 20" fill="none">
+        <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M13.5 13.5L17 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+      <input
+        class="search-input"
+        type="text"
+        placeholder="Buscar por sistema, IP, tipo de evento, usuario..."
+        [(ngModel)]="filters.search"
+        (input)="onSearchInput()"
+      />
+    </div>
+
+    <div class="date-range">
+      <input type="datetime-local" [(ngModel)]="filters.from" (change)="applyFilters()" title="Desde" />
+      <span class="date-sep">→</span>
+      <input type="datetime-local" [(ngModel)]="filters.to" (change)="applyFilters()" title="Hasta" />
+    </div>
+
+    <button type="button" class="btn btn-outline btn-sm" (click)="resetFilters()">Limpiar</button>
+  </div>
+
+  @if (error()) {
+    <div class="alert-banner alert-error logs-error-margin">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="loading">Cargando logs...</div>
+  } @else {
+
+    <!-- Tabla (escritorio) -->
+    <div class="table-wrap desktop-only">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Sistema</th>
+            <th>IP Origen</th>
+            <th>Usuario</th>
+            <th>Tipo de evento</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (log of result()?.data ?? []; track log.id) {
+            <tr (click)="open(log)" class="clickable-row">
+              <td class="td-id">{{ log.id }}</td>
+              <td><span class="system-badge">{{ log.source_system }}</span></td>
+              <td class="td-mono">{{ log.source_ip }}</td>
+              <td>{{ log.username || '—' }}</td>
+              <td><span class="event-type">{{ log.event_type }}</span></td>
+              <td class="td-time">{{ log.created_at | date:'dd/MM/yy HH:mm:ss' }}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6">
+              <div class="empty-state"><span class="empty-icon">📋</span><p>No hay logs con los filtros aplicados.</p></div>
+            </td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Tarjetas (móvil) -->
+    <div class="mobile-cards">
+      @for (log of result()?.data ?? []; track log.id) {
+        <div class="log-card" (click)="open(log)">
+          <div class="log-card-top">
+            <span class="system-badge">{{ log.source_system }}</span>
+            <span class="td-time">{{ log.created_at | date:'dd/MM/yy HH:mm' }}</span>
+          </div>
+          <span class="event-type">{{ log.event_type }}</span>
+          <div class="log-card-meta">
+            <span class="log-card-ip">{{ log.source_ip }}</span>
+            @if (log.username) {
+              <span class="log-card-user">{{ log.username }}</span>
+            }
+          </div>
+          <div class="log-card-footer">
+            <button type="button" class="btn-card-detail" (click)="open(log); $event.stopPropagation()">Ver detalle →</button>
+          </div>
+        </div>
+      } @empty {
+        <div class="empty-state"><span class="empty-icon">📋</span><p>No hay logs con los filtros aplicados.</p></div>
+      }
+    </div>
+
+    @if (result() && result()!.last_page > 1) {
+      <div class="pagination">
+        <span class="page-info">
+          Página {{ result()!.current_page }} de {{ result()!.last_page }} · {{ result()!.total }} registros
+        </span>
+        <button type="button" [disabled]="result()!.current_page <= 1" (click)="goTo(result()!.current_page - 1)">← Anterior</button>
+        <button type="button" [disabled]="result()!.current_page >= result()!.last_page" (click)="goTo(result()!.current_page + 1)">Siguiente →</button>
+      </div>
+    }
+  }
+</div>
+
+<!-- Modal detalle -->
+@if (selected()) {
+  <div class="modal-overlay" (click)="close()">
+    <div class="modal modal-wide" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Log #{{ selected()!.id }}</h3>
+        <span class="modal-close" (click)="close()">✕</span>
+      </div>
+      <div class="modal-body">
+        <div class="detail-row"><span class="detail-label">Sistema</span><span>{{ selected()!.source_system }}</span></div>
+        <div class="detail-row"><span class="detail-label">IP origen</span><code>{{ selected()!.source_ip }}</code></div>
+        <div class="detail-row"><span class="detail-label">Usuario</span><span>{{ selected()!.username || '—' }}</span></div>
+        <div class="detail-row"><span class="detail-label">Tipo evento</span><span>{{ selected()!.event_type }}</span></div>
+        <div class="detail-row"><span class="detail-label">Fecha</span><span>{{ selected()!.created_at | date:'dd/MM/yyyy HH:mm:ss' }}</span></div>
+        @if (selected()!.raw_data) {
+          <div class="detail-row detail-row-block">
+            <span class="detail-label">Raw data</span>
+            <pre class="raw-data">{{ selected()!.raw_data | json }}</pre>
+          </div>
+        }
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" (click)="close()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+}

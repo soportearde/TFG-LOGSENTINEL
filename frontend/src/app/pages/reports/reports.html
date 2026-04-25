@@ -1,0 +1,144 @@
+<div class="reports-page">
+  <div class="page-header">
+    <h2>Reportes</h2>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="openModal()">+ Generar informe</button>
+    </div>
+  </div>
+
+  @if (error()) {
+    <div class="alert-banner alert-error" style="margin:16px">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="loading">Cargando informes...</div>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="th-id">#</th>
+            <th>Título</th>
+            @if (isAdmin()) { <th>Creado por</th> }
+            <th class="th-filters">Filtros</th>
+            <th>Fecha</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (report of reports(); track report.id) {
+            <tr>
+              <td class="td-id">{{ report.id }}</td>
+              <td class="td-title">{{ report.title }}</td>
+              @if (isAdmin()) {
+                <td class="td-user">{{ report.user?.name ?? '—' }}</td>
+              }
+              <td class="td-filters">
+                @if (report.filters) {
+                  @for (entry of toEntries(report.filters); track entry[0]) {
+                    <span class="filter-chip">{{ entry[0] }}: {{ entry[1] }}</span>
+                  }
+                } @else {
+                  <span class="td-muted">Sin filtros</span>
+                }
+              </td>
+              <td class="td-time">{{ report.created_at | date:'dd/MM/yy HH:mm' }}</td>
+              <td class="td-actions">
+                <button class="btn btn-outline btn-sm" (click)="download(report)">
+                  ↓ CSV
+                </button>
+                <button class="icon-btn danger" title="Eliminar" (click)="confirmDelete(report.id)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3,6 5,6 21,6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td [attr.colspan]="isAdmin() ? 6 : 5">
+              <div class="empty-state">
+                <span class="empty-icon">📄</span>
+                <p>No hay informes generados. Crea uno con el botón superior.</p>
+              </div>
+            </td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+<!-- Generate report modal -->
+@if (showModal()) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Generar informe</h3>
+        <span class="modal-close" (click)="closeModal()">✕</span>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Título del informe *</label>
+          <input type="text" [(ngModel)]="form.title" placeholder="Informe de alertas críticas..." />
+        </div>
+        <p class="filters-title">Filtros (opcional)</p>
+        <div class="form-group">
+          <label>Estado</label>
+          <select [(ngModel)]="form.filters.status">
+            <option value="">Todos</option>
+            <option value="open">Abierta</option>
+            <option value="in_progress">En proceso</option>
+            <option value="resolved">Resuelta</option>
+            <option value="dismissed">Descartada</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Severidad</label>
+          <select [(ngModel)]="form.filters.severity">
+            <option value="">Todas</option>
+            <option value="critical">Crítica</option>
+            <option value="high">Alta</option>
+            <option value="medium">Media</option>
+            <option value="low">Baja</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Desde</label>
+            <input type="date" [(ngModel)]="form.filters.from" />
+          </div>
+          <div class="form-group">
+            <label>Hasta</label>
+            <input type="date" [(ngModel)]="form.filters.to" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="closeModal()">Cancelar</button>
+        <button class="btn btn-primary" (click)="generate()" [disabled]="saving() || !form.title">
+          {{ saving() ? 'Generando...' : 'Generar CSV' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Delete confirm -->
+@if (deleteConfirm()) {
+  <div class="modal-overlay" (click)="cancelDelete()">
+    <div class="modal modal-sm" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Eliminar informe</h3>
+        <span class="modal-close" (click)="cancelDelete()">✕</span>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:14px; color:var(--text-muted)">¿Eliminar este informe? Esta acción no se puede deshacer.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="cancelDelete()">Cancelar</button>
+        <button class="btn btn-danger" (click)="doDelete()">Eliminar</button>
+      </div>
+    </div>
+  </div>
+}

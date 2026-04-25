@@ -1,0 +1,56 @@
+.reports-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  background: var(--card-bg);
+}
+
+.td-id    { color: var(--text-light); font-size: 12px; }
+.td-title { font-weight: 500; }
+.td-user  { color: var(--text-muted); font-size: 12px; }
+.td-time  { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+.td-muted { color: var(--text-light); font-size: 12px; font-style: italic; }
+.td-actions { display: flex; gap: 6px; align-items: center; }
+
+.td-filters {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  max-width: 220px;
+}
+
+.filter-chip {
+  background: var(--primary-light);
+  color: var(--primary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.filters-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  margin-bottom: 4px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.modal-sm { max-width: 380px; }
+
+/* ---- Mobile ---- */
+@media (max-width: 768px) {
+  // Ocultar columna # y columna Filtros (tienen clases específicas)
+  .th-id, .td-id,
+  .th-filters, .td-filters { display: none; }
+
+  // Fechas del formulario en columna única
+  .form-row { grid-template-columns: 1fr; }
+}

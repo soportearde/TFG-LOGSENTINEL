@@ -1,0 +1,38 @@
+services:
+
+  collector:
+    build: ./collector
+    ports:
+      - "5000:5000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    networks:
+      - lognet
+    restart: unless-stopped
+
+  normalizer:
+    build: ./normalizer
+    networks:
+      - lognet
+    restart: unless-stopped
+
+  correlator:
+    build: ./correlator
+    ports:
+      - "7000:7000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    volumes:
+      - ./correlator/rules:/app/rules
+    networks:
+      - lognet
+    restart: unless-stopped
+
+networks:
+  lognet:
+    driver: bridge

@@ -1,0 +1,223 @@
+<div class="alerts-page">
+  <div class="page-header">
+    <h2>Alertas</h2>
+    @if (result()) {
+      <span class="header-count">{{ result()!.total }} alertas</span>
+    }
+    <button type="button" class="filter-toggle-btn" [class.active]="filtersOpen() || isFiltered()" (click)="toggleFilters()" aria-label="Filtros">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+      </svg>
+      @if (isFiltered()) {
+        <span class="filter-active-dot"></span>
+      }
+    </button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filter-bar" [class.filter-open]="filtersOpen()">
+    <div class="search-wrap">
+      <svg class="search-icon" viewBox="0 0 20 20" fill="none">
+        <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M13.5 13.5L17 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+      <input
+        class="search-input"
+        type="text"
+        placeholder="Buscar por título, sistema, IP, usuario..."
+        [(ngModel)]="filters.search"
+        (input)="onSearchInput()"
+      />
+    </div>
+
+    <select [(ngModel)]="filters.status" (change)="applyFilters()" aria-label="Filtrar por estado">
+      <option value="">Todos los estados</option>
+      <option value="open">Abierta</option>
+      <option value="in_progress">En proceso</option>
+      <option value="resolved">Resuelta</option>
+      <option value="dismissed">Descartada</option>
+    </select>
+
+    <select [(ngModel)]="filters.severity" (change)="applyFilters()" aria-label="Filtrar por severidad">
+      <option value="">Todas las severidades</option>
+      <option value="critical">Crítica</option>
+      <option value="high">Alta</option>
+      <option value="medium">Media</option>
+      <option value="low">Baja</option>
+    </select>
+
+    <div class="date-range">
+      <input type="datetime-local" [(ngModel)]="filters.from" (change)="applyFilters()" title="Desde" />
+      <span class="date-sep">→</span>
+      <input type="datetime-local" [(ngModel)]="filters.to" (change)="applyFilters()" title="Hasta" />
+    </div>
+
+    <button type="button" class="btn btn-outline btn-sm" (click)="resetFilters()">Limpiar</button>
+  </div>
+
+  @if (error()) {
+    <div class="alert-banner alert-error alert-banner-margin">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="loading">Cargando alertas...</div>
+  } @else {
+
+    <!-- Tabla (escritorio) -->
+    <div class="table-wrap desktop-only">
+      <table>
+        <thead>
+          <tr>
+            <th>Severidad</th>
+            <th>Título</th>
+            <th>Sistema</th>
+            <th>IP Origen</th>
+            <th>Estado</th>
+            <th>Fecha</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (alert of result()?.data ?? []; track alert.id) {
+            <tr (click)="open(alert)" class="clickable-row">
+              <td>
+                <span [class]="severityClass(alert.severity?.name)">
+                  <span class="dot"></span>{{ severityLabel(alert.severity?.name) }}
+                </span>
+              </td>
+              <td class="td-title">{{ alert.title }}</td>
+              <td class="td-mono">{{ alert.source_system ?? '—' }}</td>
+              <td class="td-mono">{{ alert.source_ip ?? '—' }}</td>
+              <td><span [class]="statusClass(alert.status)">{{ statusLabel(alert.status) }}</span></td>
+              <td class="td-time">{{ alert.event_timestamp | date:'dd/MM/yy HH:mm' }}</td>
+              <td (click)="$event.stopPropagation()">
+                <div class="actions-cell">
+                  @if (auth.isAnalyst()) {
+                    <select class="status-select" [value]="alert.status" (change)="changeStatus(alert, $any($event.target).value)" aria-label="Cambiar estado de la alerta">
+                      <option value="open">Abierta</option>
+                      <option value="in_progress">En proceso</option>
+                      <option value="resolved">Resuelta</option>
+                      <option value="dismissed">Descartada</option>
+                    </select>
+                  }
+                  @if (auth.isAdmin()) {
+                    <button type="button" class="btn-delete" title="Eliminar alerta" (click)="deleteAlert(alert)">✕</button>
+                  }
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="7">
+              <div class="empty-state"><span class="empty-icon">🔔</span><p>No hay alertas con los filtros aplicados.</p></div>
+            </td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Tarjetas (móvil) -->
+    <div class="mobile-cards">
+      @for (alert of result()?.data ?? []; track alert.id) {
+        <div class="alert-card" [class]="'alert-card sev-' + (alert.severity?.name ?? 'low')" (click)="open(alert)">
+          <div class="alert-card-top">
+            <span [class]="severityClass(alert.severity?.name)">
+              <span class="dot"></span>{{ severityLabel(alert.severity?.name) }}
+            </span>
+            <span [class]="statusClass(alert.status)">{{ statusLabel(alert.status) }}</span>
+          </div>
+          <p class="alert-card-title">{{ alert.title }}</p>
+          <p class="alert-card-time">{{ alert.event_timestamp | date:'dd/MM/yy · HH:mm' }}</p>
+          <div class="alert-card-actions" (click)="$event.stopPropagation()">
+            @if (auth.isAnalyst()) {
+              <select class="status-select" [value]="alert.status" (change)="changeStatus(alert, $any($event.target).value)" aria-label="Cambiar estado de la alerta">
+                <option value="open">Abierta</option>
+                <option value="in_progress">En proceso</option>
+                <option value="resolved">Resuelta</option>
+                <option value="dismissed">Descartada</option>
+              </select>
+            }
+            @if (auth.isAdmin()) {
+              <button type="button" class="btn-delete" title="Eliminar alerta" (click)="deleteAlert(alert)">✕</button>
+            }
+            <button type="button" class="btn-card-detail" (click)="open(alert)">Ver detalle →</button>
+          </div>
+        </div>
+      } @empty {
+        <div class="empty-state"><span class="empty-icon">🔔</span><p>No hay alertas con los filtros aplicados.</p></div>
+      }
+    </div>
+
+    @if (result() && result()!.last_page > 1) {
+      <div class="pagination">
+        <span class="page-info">
+          Página {{ result()!.current_page }} de {{ result()!.last_page }} · {{ result()!.total }} resultados
+        </span>
+        <button type="button" [disabled]="result()!.current_page <= 1" (click)="goTo(result()!.current_page - 1)">← Anterior</button>
+        <button type="button" [disabled]="result()!.current_page >= result()!.last_page" (click)="goTo(result()!.current_page + 1)">Siguiente →</button>
+      </div>
+    }
+  }
+</div>
+
+<!-- Modal detalle -->
+@if (selected()) {
+  <div class="modal-overlay" (click)="close()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Detalle de alerta #{{ selected()!.id }}</h3>
+        <span class="modal-close" (click)="close()">✕</span>
+      </div>
+      <div class="modal-body">
+        <div class="detail-row">
+          <span class="detail-label">Título</span>
+          <span>{{ selected()!.title }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Severidad</span>
+          <span [class]="severityClass(selected()!.severity?.name)">
+            <span class="dot"></span>{{ severityLabel(selected()!.severity?.name) }}
+          </span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Estado</span>
+          <span [class]="statusClass(selected()!.status)">{{ statusLabel(selected()!.status) }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Sistema</span>
+          <span>{{ selected()!.source_system ?? '—' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">IP origen</span>
+          <code>{{ selected()!.source_ip ?? '—' }}</code>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Usuario</span>
+          <span>{{ selected()!.username ?? '—' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Mensaje</span>
+          <span>{{ selected()!.message ?? '—' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Fecha evento</span>
+          <span>{{ selected()!.event_timestamp | date:'dd/MM/yyyy HH:mm:ss' }}</span>
+        </div>
+        @if (selected()!.rule) {
+          <div class="detail-row">
+            <span class="detail-label">Regla</span>
+            <code>{{ selected()!.rule!.rule_name }}</code>
+          </div>
+        }
+      </div>
+      <div class="modal-footer">
+        @if (auth.isAdmin()) {
+          <button type="button" class="btn btn-danger" (click)="deleteAlert(selected()!)">Eliminar alerta</button>
+        }
+        <button type="button" class="btn btn-outline" (click)="close()">Cerrar</button>
+        <button type="button" class="btn btn-primary" (click)="viewRelatedLogs(selected()!)">
+          Ver logs relacionados →
+        </button>
+      </div>
+    </div>
+  </div>
+}

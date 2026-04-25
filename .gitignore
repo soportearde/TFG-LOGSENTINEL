@@ -1,0 +1,55 @@
+# ─── Entornos virtuales y secretos ───
+.env
+*.env
+!.env.example
+.venv/
+venv/
+env/
+
+# ─── Python ───
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+
+# ─── Node / Angular ───
+node_modules/
+dist/
+.angular/
+npm-debug.log*
+yarn-error.log
+
+# ─── PHP / Laravel ───
+vendor/
+bootstrap/cache/*.php
+storage/logs/
+storage/framework/cache/
+storage/framework/sessions/
+storage/framework/views/
+*.log
+.phpunit.result.cache
+auth.json
+
+# ─── Bases de datos y backups ───
+*.db
+*.sqlite
+*.sqlite3
+*.bak
+*.backup
+
+# ─── IDE y sistema operativo ───
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ─── Herramientas de desarrollo ───
+.claude/
+.sass-cache/
+coverage/

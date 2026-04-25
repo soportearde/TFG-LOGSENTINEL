@@ -1,0 +1,166 @@
+<div class="landing">
+
+  <!-- ─── Navbar ─── -->
+  <nav class="landing-nav">
+    <div class="nav-brand">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2L4 6v6c0 5.25 3.4 10.15 8 11.32C16.6 22.15 20 17.25 20 12V6l-8-4z" fill="#7c3aed"/>
+        <path d="M9 12l2 2 4-4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span>LogSentinel</span>
+    </div>
+    <div class="nav-links">
+      <a href="#producto">Producto</a>
+      <a href="#funcionalidades">Funcionalidades</a>
+      <a href="#casos">Casos de uso</a>
+      @if (isLoggedIn) {
+        <a routerLink="/app/dashboard" class="btn btn-primary">Ir al panel</a>
+      } @else {
+        <a routerLink="/login" class="btn btn-primary">Iniciar sesión</a>
+      }
+    </div>
+  </nav>
+
+  <!-- ─── Hero ─── -->
+  <section class="hero" id="producto">
+    <div class="hero-glow hero-glow--1"></div>
+    <div class="hero-glow hero-glow--2"></div>
+    <div class="hero-content">
+
+      <div class="hero-text" data-reveal>
+        <div class="hero-badge">
+          <span class="badge-dot"></span>
+          Plataforma SIEM Educativa
+        </div>
+        <h1>LogSentinel: análisis inteligente de logs y detección de amenazas</h1>
+        <p>Plataforma modular para la recopilación, correlación y análisis de eventos de seguridad en sistemas informáticos.</p>
+        <div class="hero-actions">
+          @if (isLoggedIn) {
+            <a routerLink="/app/dashboard" class="btn btn-primary hero-cta">
+              Ir al panel
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </a>
+          } @else {
+            <a routerLink="/login" class="btn btn-primary hero-cta">
+              Iniciar sesión
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </a>
+          }
+        </div>
+      </div>
+
+      <div class="hero-visual" data-reveal data-reveal-delay="150">
+        <div class="mock-card">
+          <div class="mock-header">
+            <div class="mock-dots">
+              <span class="mock-dot red"></span>
+              <span class="mock-dot yellow"></span>
+              <span class="mock-dot green"></span>
+            </div>
+            <span class="mock-title">LogSentinel · Dashboard</span>
+            <div class="mock-live">
+              <span class="live-dot"></span>
+              Live
+            </div>
+          </div>
+          <div class="mock-body">
+            <div class="mock-row">
+              <span class="mock-badge critical">● Crítica</span>
+              <span class="mock-label">SQL Injection detectado</span>
+              <span class="mock-time">hace 2m</span>
+            </div>
+            <div class="mock-row">
+              <span class="mock-badge high">● Alta</span>
+              <span class="mock-label">Acceso no autorizado</span>
+              <span class="mock-time">hace 5m</span>
+            </div>
+            <div class="mock-row">
+              <span class="mock-badge high">● Alta</span>
+              <span class="mock-label">Acceso no autorizado</span>
+              <span class="mock-time">hace 12m</span>
+            </div>
+            <div class="mock-row">
+              <span class="mock-badge medium">● Media</span>
+              <span class="mock-label">Escaneo de puertos</span>
+              <span class="mock-time">hace 18m</span>
+            </div>
+          </div>
+          <div class="mock-footer">
+            <div class="mock-stat">
+              <span class="stat-value">4</span>
+              <span class="stat-label">alertas activas</span>
+            </div>
+            <div class="mock-stat">
+              <span class="stat-value ok">Sistema OK</span>
+              <span class="stat-label">monitorizando</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ─── About ─── -->
+  <section class="about" id="funcionalidades">
+    <div class="about-inner">
+      <div class="about-heading" data-reveal>
+        <h2>¿Qué es LogSentinel?</h2>
+      </div>
+      <div class="about-body" data-reveal data-reveal-delay="100">
+        <p>LogSentinel es una plataforma orientada al análisis de logs procedentes de sistemas externos. A través de un pipeline modular, aplica reglas de correlación para detectar comportamientos anómalos y generar alertas de seguridad, facilitando la monitorización continua y la ciberinteligencia.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Features ─── -->
+  <section class="features" id="casos">
+    <div class="features-inner">
+      <div class="features-header" data-reveal>
+        <h2>Funcionalidades principales</h2>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card" data-reveal data-reveal-delay="0">
+          <div class="feature-icon-wrap"><span class="feature-icon">🔍</span></div>
+          <h3>Recolección de logs</h3>
+          <p>Recibe eventos de cualquier sistema externo mediante HTTP y los almacena en bruto para su análisis.</p>
+        </div>
+        <div class="feature-card" data-reveal data-reveal-delay="60">
+          <div class="feature-icon-wrap"><span class="feature-icon">⚡</span></div>
+          <h3>Correlación en tiempo real</h3>
+          <p>Aplica reglas configurables para detectar patrones sospechosos como fuerza bruta o ataques DoS.</p>
+        </div>
+        <div class="feature-card" data-reveal data-reveal-delay="120">
+          <div class="feature-icon-wrap"><span class="feature-icon">🚨</span></div>
+          <h3>Alertas automáticas</h3>
+          <p>Genera alertas clasificadas por severidad cuando se superan los umbrales definidos.</p>
+        </div>
+        <div class="feature-card" data-reveal data-reveal-delay="180">
+          <div class="feature-icon-wrap"><span class="feature-icon">📊</span></div>
+          <h3>Dashboard interactivo</h3>
+          <p>Visualiza estadísticas de actividad, alertas recientes y distribución por severidad.</p>
+        </div>
+        <div class="feature-card" data-reveal data-reveal-delay="240">
+          <div class="feature-icon-wrap"><span class="feature-icon">👥</span></div>
+          <h3>Gestión de usuarios</h3>
+          <p>Roles diferenciados: administrador, analista y usuario con permisos controlados.</p>
+        </div>
+        <div class="feature-card" data-reveal data-reveal-delay="300">
+          <div class="feature-icon-wrap"><span class="feature-icon">📄</span></div>
+          <h3>Informes exportables</h3>
+          <p>Genera y descarga informes en formato CSV filtrados por severidad, estado y fecha.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Footer ─── -->
+  <footer class="landing-footer">
+    <p>© Copyright LogSentinel 2026 — Todos los derechos reservados</p>
+  </footer>
+
+</div>

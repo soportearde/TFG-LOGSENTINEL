@@ -1,0 +1,281 @@
+<div class="systems-page">
+  <div class="page-header">
+    <h2>Sistemas Conectados</h2>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="openCreate()">+ Conectar sistema</button>
+    </div>
+  </div>
+
+  @if (error()) {
+    <div class="alert-banner alert-error" style="margin:16px">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="loading">Cargando sistemas...</div>
+  } @else {
+
+    <!-- Tabla (escritorio) -->
+    <div class="table-wrap desktop-only">
+      <table>
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Tipo</th>
+            <th>IP</th>
+            <th>Estado</th>
+            <th>Última conexión</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (system of systems(); track system.id) {
+            <tr>
+              <td class="td-name">
+                {{ system.system_name }}
+                @if (system.description) {
+                  <span class="td-sub">{{ system.description }}</span>
+                }
+              </td>
+              <td>
+                <span class="type-badge">{{ typeLabel(system.system_type) }}</span>
+              </td>
+              <td class="td-mono">{{ system.ip_address ?? '—' }}</td>
+              <td>
+                <span [class]="statusClass(system.status)">
+                  <span class="dot"></span>
+                  {{ statusLabel(system.status) }}
+                </span>
+              </td>
+              <td class="td-time">
+                {{ system.last_seen ? (system.last_seen | date:'dd/MM/yy HH:mm') : 'Nunca' }}
+              </td>
+              <td class="td-actions">
+                <button class="icon-btn" title="Ver comando de instalación" (click)="showInstallCommand(system)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="4,17 10,11 4,5"/>
+                    <line x1="12" y1="19" x2="20" y2="19"/>
+                  </svg>
+                </button>
+                <button class="icon-btn" title="Editar" (click)="openEdit(system)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+                <button class="icon-btn danger" title="Eliminar" (click)="confirmDelete(system.id)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3,6 5,6 21,6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6">
+              <div class="empty-state">
+                <span class="empty-icon">🖥️</span>
+                <p>No hay sistemas conectados.</p>
+              </div>
+            </td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Tarjetas (móvil) -->
+    <div class="mobile-cards">
+      @for (system of systems(); track system.id) {
+        <div class="system-card">
+          <div class="system-card-top">
+            <div class="system-card-info">
+              <span class="system-card-name">{{ system.system_name }}</span>
+              @if (system.description) {
+                <span class="system-card-desc">{{ system.description }}</span>
+              }
+            </div>
+            <span [class]="statusClass(system.status)">
+              <span class="dot"></span>{{ statusLabel(system.status) }}
+            </span>
+          </div>
+          <div class="system-card-meta">
+            <span class="type-badge">{{ typeLabel(system.system_type) }}</span>
+            <span class="system-card-time">
+              {{ system.last_seen ? (system.last_seen | date:'dd/MM/yy HH:mm') : 'Sin conexión' }}
+            </span>
+          </div>
+          <div class="system-card-actions">
+            <button type="button" class="btn btn-outline btn-sm" (click)="showInstallCommand(system)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="4,17 10,11 4,5"/>
+                <line x1="12" y1="19" x2="20" y2="19"/>
+              </svg>
+              Instalar
+            </button>
+            <button type="button" class="btn btn-outline btn-sm" (click)="openEdit(system)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+              Editar
+            </button>
+            <button type="button" class="btn btn-danger btn-sm" (click)="confirmDelete(system.id)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3,6 5,6 21,6"/>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+              </svg>
+              Eliminar
+            </button>
+          </div>
+        </div>
+      } @empty {
+        <div class="empty-state">
+          <span class="empty-icon">🖥️</span>
+          <p>No hay sistemas conectados.</p>
+          <p>Pulsa "Conectar sistema" para añadir tu primer servidor.</p>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- Modal Crear / Editar -->
+@if (modalMode() === 'create' || modalMode() === 'edit') {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ modalMode() === 'create' ? 'Conectar nuevo sistema' : 'Editar sistema' }}</h3>
+        <span class="modal-close" (click)="closeModal()">✕</span>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Nombre del sistema *</label>
+          <input type="text" [(ngModel)]="form.system_name" placeholder="web-server-01" />
+        </div>
+        <div class="form-group">
+          <label>Tipo de sistema *</label>
+          <select [(ngModel)]="form.system_type" aria-label="Tipo de sistema">
+            @for (t of systemTypes; track t.value) {
+              <option [value]="t.value">{{ t.label }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Descripción</label>
+          <input type="text" [(ngModel)]="form.description" placeholder="Servidor web de producción..." />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="closeModal()">Cancelar</button>
+        <button class="btn btn-primary" (click)="save()" [disabled]="saving() || !form.system_name">
+          {{ saving() ? 'Guardando...' : (modalMode() === 'create' ? 'Crear y ver comando' : 'Guardar') }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal Comando de Instalación -->
+@if (modalMode() === 'install') {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal modal-lg" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Instalar agente en {{ form.system_name }}</h3>
+        <span class="modal-close" (click)="closeModal()">✕</span>
+      </div>
+      <div class="modal-body">
+        @if (installLoading()) {
+          <div class="loading">Generando comando...</div>
+        } @else if (form.system_type === 'wordpress') {
+
+          <!-- ── Instalación WordPress ── -->
+          <p class="install-intro">
+            Descarga el plugin ya configurado con tu API Key e instálalo en WordPress.
+          </p>
+
+          <div class="wp-download-box">
+            <div class="wp-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+            </div>
+            <div class="wp-download-info">
+              <p class="wp-download-title">Plugin LogSentinel para WordPress</p>
+              <p class="wp-download-sub">El archivo .php ya incluye tu API Key configurada.</p>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" (click)="downloadPlugin()">Descargar plugin</button>
+          </div>
+
+          <div class="install-steps">
+            <p class="step"><strong>1.</strong> Descarga el plugin pulsando el botón</p>
+            <p class="step"><strong>2.</strong> En WordPress: <strong>Plugins → Añadir nuevo → Subir plugin</strong></p>
+            <p class="step"><strong>3.</strong> Sube el archivo .php descargado y actívalo</p>
+            <p class="step"><strong>4.</strong> El plugin comenzará a enviar logs automáticamente</p>
+          </div>
+
+          <div class="install-info">
+            <p><strong>API Key:</strong> <code>{{ form.api_key }}</code></p>
+            <button class="btn btn-outline btn-sm" (click)="regenerateKey($any(form))">
+              Regenerar API Key
+            </button>
+          </div>
+
+        } @else {
+
+          <!-- ── Instalación Linux (agente) ── -->
+          <p class="install-intro">
+            Conéctate al servidor por SSH y pega este comando. El agente se instalará
+            como servicio systemd y empezará a enviar logs automáticamente.
+          </p>
+
+          <div class="install-box">
+            <pre class="install-command">{{ installCommand() }}</pre>
+            <button class="btn btn-copy" (click)="copyCommand()">
+              {{ copySuccess() ? '✓ Copiado' : 'Copiar' }}
+            </button>
+          </div>
+
+          <div class="install-steps">
+            <p class="step"><strong>1.</strong> Conéctate al servidor por SSH</p>
+            <p class="step"><strong>2.</strong> Pega el comando y pulsa Enter</p>
+            <p class="step"><strong>3.</strong> Espera a que termine la instalación</p>
+            <p class="step"><strong>4.</strong> Verifica con: <code>systemctl status logsentinel-agent</code></p>
+          </div>
+
+          <div class="install-info">
+            <p><strong>API Key:</strong> <code>{{ form.api_key }}</code></p>
+            <button class="btn btn-outline btn-sm" (click)="regenerateKey($any(form))">
+              Regenerar API Key
+            </button>
+          </div>
+
+        }
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" (click)="closeModal()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal Confirmar eliminación -->
+@if (deleteConfirm()) {
+  <div class="modal-overlay" (click)="cancelDelete()">
+    <div class="modal modal-sm" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Eliminar sistema</h3>
+        <span class="modal-close" (click)="cancelDelete()">✕</span>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:14px; color: var(--text-muted)">
+          ¿Estás seguro? El agente dejará de poder enviar logs. Esta acción no se puede deshacer.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="cancelDelete()">Cancelar</button>
+        <button class="btn btn-danger" (click)="doDelete()">Eliminar</button>
+      </div>
+    </div>
+  </div>
+}
