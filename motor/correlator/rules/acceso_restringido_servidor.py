@@ -9,40 +9,48 @@ _RESTRICTED_RESOURCES = [
 
 
 def run(event):
-    if event.get("event_type") != "permission_denied" and event.get("event_type") != "sudo_command":
+    event_type = event.get("event_type", "")
+    if event_type not in ("permission_denied", "unauthorized_access", "sudo_command"):
         return None
 
     username = event.get("username", "").rstrip(",").strip()
     if not username:
         return None
 
-    message = event.get("message", "")
-    raw_line = event.get("raw_line", "")
+    # FileGuardian (auditd): la ruta está en metadata
+    metadata = event.get("metadata") or {}
+    accessed_path = metadata.get("accessed_path") or metadata.get("restricted_path") or ""
 
-    combined_text = f"{message} {raw_line}"
+    # Auth.log/syslog: la ruta está en el mensaje
+    message  = event.get("message", "")
+    raw_line = event.get("raw_line", "")
+    text     = f"{accessed_path} {message} {raw_line}"
 
     for resource in _RESTRICTED_RESOURCES:
-        path = resource["path"]
+        path          = resource["path"]
         allowed_users = resource["allowed_users"]
 
-        if path in combined_text:
-            if username not in allowed_users:
-                severity = 4 if path == "/etc/shadow" else 3
+        if path not in text:
+            continue
 
-                return {
-                    "rule_name": "acceso_restringido_servidor",
-                    "severity_id": severity,
-                    "source_ip": event.get("source_ip"),
-                    "username": username,
-                    "title": "Acceso no autorizado a recurso restringido",
-                    "message": (
-                        f"El usuario '{username}' ha intentado acceder al recurso "
-                        f"restringido '{path}' sin estar en la lista de usuarios "
-                        f"permitidos ({', '.join(allowed_users)}). "
-                        f"Servidor: {event.get('hostname', 'desconocido')}."
-                    ),
-                    "metadata": event,
-                    "event_timestamp": datetime.now(timezone.utc),
-                }
+        if username in allowed_users:
+            continue
+
+        severity = 4 if path == "/etc/shadow" else 3
+
+        return {
+            "rule_name":       "acceso_restringido_servidor",
+            "severity_id":     severity,
+            "source_ip":       event.get("source_ip"),
+            "username":        username,
+            "title":           "Acceso no autorizado a recurso restringido",
+            "message": (
+                f"El usuario '{username}' intentó acceder al recurso restringido "
+                f"'{path}'. Usuarios permitidos: {', '.join(allowed_users)}. "
+                f"Servidor: {event.get('hostname', 'desconocido')}."
+            ),
+            "metadata":        event,
+            "event_timestamp": datetime.now(timezone.utc),
+        }
 
     return None
