@@ -26,6 +26,10 @@ export class RulesPage implements OnInit {
   modalMode     = signal<ModalMode | null>(null);
   form: Partial<CorrelationRule> = {};
 
+  codeModal   = signal<CorrelationRule | null>(null);
+  codeLoading = signal(false);
+  codeContent = signal<string | null>(null);
+
   ngOnInit() {
     // Cargar datos solo si no existen en caché
     if (!this.rules()) {
@@ -85,6 +89,18 @@ export class RulesPage implements OnInit {
       next: () => this.svc.list().subscribe(r => this.cache.set('rules', r))
     });
   }
+
+  openCode(rule: CorrelationRule) {
+    this.codeModal.set(rule);
+    this.codeContent.set(null);
+    this.codeLoading.set(true);
+    this.svc.getCode(rule.id).subscribe({
+      next: (res) => { this.codeContent.set(res.code); this.codeLoading.set(false); },
+      error: ()    => { this.codeContent.set(null);    this.codeLoading.set(false); }
+    });
+  }
+
+  closeCode() { this.codeModal.set(null); this.codeContent.set(null); }
 
   confirmDelete(id: number) { this.deleteConfirm.set(id); }
   cancelDelete()             { this.deleteConfirm.set(null); }

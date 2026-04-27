@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 _RESTRICTED_RESOURCES = [
     {"path": "/etc/shadow", "allowed_users": ["root"]},
     {"path": "/var/www/app/config", "allowed_users": ["www-data", "root"]},
-    {"path": "/home/datos-secretos", "allowed_users": ["admin", "root"]},
+    {"path": "/home/datos-secretos", "allowed_users": ["miguel", "root"]},
 ]
 
 

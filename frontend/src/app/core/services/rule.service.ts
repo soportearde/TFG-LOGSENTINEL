@@ -27,4 +27,8 @@ export class RuleService {
   delete(id: number) {
     return this.http.delete(`${API}/correlation-rules/${id}`);
   }
+
+  getCode(id: number) {
+    return this.http.get<{ code: string | null }>(`${API}/correlation-rules/${id}/code`);
+  }
 }

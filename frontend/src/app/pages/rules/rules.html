@@ -46,6 +46,12 @@
               </td>
               <td class="td-time">{{ rule.updated_at | date:'dd/MM/yy' }}</td>
               <td class="td-actions">
+                <button class="icon-btn" title="Ver código" (click)="openCode(rule)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="16 18 22 12 16 6"/>
+                    <polyline points="8 6 2 12 8 18"/>
+                  </svg>
+                </button>
                 <button class="icon-btn" title="Editar" (click)="openEdit(rule)">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -90,6 +96,13 @@
             <p class="rule-card-desc">{{ rule.description }}</p>
           }
           <div class="rule-card-actions">
+            <button type="button" class="btn btn-outline btn-sm" (click)="openCode(rule)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="16 18 22 12 16 6"/>
+                <polyline points="8 6 2 12 8 18"/>
+              </svg>
+              Código
+            </button>
             <button type="button" class="btn btn-outline btn-sm" (click)="openEdit(rule)">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -150,6 +163,30 @@
         <button class="btn btn-primary" (click)="save()" [disabled]="saving() || !form.rule_name">
           {{ saving() ? 'Guardando...' : 'Guardar' }}
         </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Code viewer modal -->
+@if (codeModal()) {
+  <div class="modal-overlay" (click)="closeCode()">
+    <div class="modal modal-lg" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Código — {{ codeModal()!.rule_name }}</h3>
+        <span class="modal-close" (click)="closeCode()">✕</span>
+      </div>
+      <div class="modal-body">
+        @if (codeLoading()) {
+          <div class="loading">Cargando código...</div>
+        } @else if (codeContent()) {
+          <pre class="code-block"><code>{{ codeContent() }}</code></pre>
+        } @else {
+          <p style="font-size:14px; color: var(--text-muted)">No hay código disponible para esta regla.</p>
+        }
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="closeCode()">Cerrar</button>
       </div>
     </div>
   </div>

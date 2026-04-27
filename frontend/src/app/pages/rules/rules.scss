@@ -11,6 +11,21 @@
 .td-actions { display: flex; gap: 4px; }
 
 .modal-sm { max-width: 380px; }
+.modal-lg { max-width: 720px; width: 90vw; }
+
+.code-block {
+  background: #0d1117;
+  color: #c9d1d9;
+  border-radius: 6px;
+  padding: 16px;
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-x: auto;
+  white-space: pre;
+  max-height: 60vh;
+  overflow-y: auto;
+  margin: 0;
+}
 
 /* ---- Tarjetas móvil ---- */
 .mobile-cards { display: none; }
