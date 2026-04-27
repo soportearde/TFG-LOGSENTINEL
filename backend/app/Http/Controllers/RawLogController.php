@@ -40,8 +40,10 @@ class RawLogController extends Controller
 
         $data = $request->all();
 
-        // El agente envía un batch: {"agent":{...}, "events":[...]}
-        // También aceptamos evento individual para compatibilidad
+        // El agente envía batch: {"agent":{...}, "events":[...]}
+        // Guardamos cada evento en raw_logs para el historial del frontend,
+        // pero reenviamos el payload completo al collector UNA sola vez
+        // para que el pipeline (collector→normalizer→correlador) lo procese.
         $events = isset($data['events']) && is_array($data['events'])
             ? $data['events']
             : [$data];
@@ -57,14 +59,13 @@ class RawLogController extends Controller
                                     ? \Carbon\Carbon::parse($event['timestamp'])
                                     : now(),
             ]);
+        }
 
-            // Reenviar al collector para el pipeline completo
-            // (collector → normalizer → correlator → alertas)
-            try {
-                Http::timeout(3)->post('http://localhost:5000/log', $event);
-            } catch (\Exception $e) {
-                Log::warning('Collector no disponible: ' . $e->getMessage());
-            }
+        // Reenviar el batch completo al collector una sola vez
+        try {
+            Http::timeout(3)->post('http://localhost:5000/log', $data);
+        } catch (\Exception $e) {
+            Log::warning('Collector no disponible: ' . $e->getMessage());
         }
 
         return response()->json(['status' => 'ok']);
