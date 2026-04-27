@@ -36,25 +36,35 @@ class RawLogController extends Controller
             ]);
         }
 
+        $system->update(['last_seen' => now(), 'ip_address' => $request->ip()]);
+
         $data = $request->all();
 
-        RawLog::create([
-            'source_system' => $data['source_system'] ?? 'unknown',
-            'source_ip'     => $data['source_ip'] ?? $request->ip(),
-            'username'      => $data['username'] ?? null,
-            'event_type'    => $data['event_type'] ?? 'generic_event',
-            'raw_data'      => $data,
-            'created_at'    => isset($data['agent_timestamp'])
-                                ? \Carbon\Carbon::parse($data['agent_timestamp'])
-                                : now(),
-        ]);
+        // El agente envía un batch: {"agent":{...}, "events":[...]}
+        // También aceptamos evento individual para compatibilidad
+        $events = isset($data['events']) && is_array($data['events'])
+            ? $data['events']
+            : [$data];
 
-        // Reenviar evento al collector para que siga el pipeline completo
-        // (collector → normalizer → correlator → alertas)
-        try {
-            Http::timeout(3)->post('http://localhost:5000/log', $data);
-        } catch (\Exception $e) {
-            Log::warning('Collector no disponible: ' . $e->getMessage());
+        foreach ($events as $event) {
+            RawLog::create([
+                'source_system' => $event['source_system'] ?? 'unknown',
+                'source_ip'     => $event['source_ip'] ?? $request->ip(),
+                'username'      => $event['username'] ?? null,
+                'event_type'    => $event['event_type'] ?? 'generic_event',
+                'raw_data'      => $event,
+                'created_at'    => isset($event['timestamp'])
+                                    ? \Carbon\Carbon::parse($event['timestamp'])
+                                    : now(),
+            ]);
+
+            // Reenviar al collector para el pipeline completo
+            // (collector → normalizer → correlator → alertas)
+            try {
+                Http::timeout(3)->post('http://localhost:5000/log', $event);
+            } catch (\Exception $e) {
+                Log::warning('Collector no disponible: ' . $e->getMessage());
+            }
         }
 
         return response()->json(['status' => 'ok']);
