@@ -80,8 +80,12 @@ echo ""
 # ─────────────────────────────────────────────────────────────
 echo -e "${GREEN}[1/5] Instalando dependencias...${NC}"
 apt-get update -qq 2>&1 | grep -v "^W:" || true   # ignorar repos rotos de terceros
-apt-get install -y -qq python3 python3-pip > /dev/null 2>&1
+apt-get install -y -qq python3 python3-pip auditd > /dev/null 2>&1
 pip3 install requests --break-system-packages -q 2>/dev/null || pip3 install requests -q
+
+# Activar auditd (File Guardian lo necesita para vigilar rutas restringidas)
+systemctl enable auditd > /dev/null 2>&1 || true
+systemctl start  auditd > /dev/null 2>&1 || true
 
 # ─────────────────────────────────────────────────────────────
 # 2. CREAR DIRECTORIOS
@@ -97,14 +101,22 @@ mkdir -p /var/log/logsentinel
 # ─────────────────────────────────────────────────────────────
 echo -e "${GREEN}[3/5] Instalando el agente...${NC}"
 
-# Descargar el agente desde el servidor de LogSentinel
-# (en producción sería una URL real, aquí usamos el script local)
-AGENT_URL="http://20.238.17.71/agent/logsentinel-agent.py"
-if curl -sSf "$AGENT_URL" -o /opt/logsentinel/logsentinel-agent.py 2>/dev/null; then
-    echo "  Agente descargado desde el servidor"
-else
-    echo -e "${YELLOW}  No se pudo descargar. Asegúrate de copiar logsentinel-agent.py a /opt/logsentinel/${NC}"
+# Derivar la URL del agente a partir de --url (ej: https://host/api/log -> https://host/agent/logsentinel-agent.py)
+AGENT_BASE="${LOGSENTINEL_URL%/api/log}"
+AGENT_URL="${AGENT_BASE}/agent/logsentinel-agent.py"
+
+if ! curl -sSfL "$AGENT_URL" -o /opt/logsentinel/logsentinel-agent.py; then
+    echo -e "${RED}  Error: no se pudo descargar el agente desde $AGENT_URL${NC}"
+    exit 1
 fi
+
+# Validar que es un fichero Python (no una página HTML de error)
+if ! head -1 /opt/logsentinel/logsentinel-agent.py | grep -q '^#!.*python'; then
+    echo -e "${RED}  Error: la descarga de $AGENT_URL no es un script Python válido${NC}"
+    head -3 /opt/logsentinel/logsentinel-agent.py
+    exit 1
+fi
+echo "  Agente descargado desde $AGENT_URL"
 
 chmod +x /opt/logsentinel/logsentinel-agent.py
 

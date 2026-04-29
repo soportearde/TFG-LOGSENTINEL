@@ -28,29 +28,11 @@ class RawLogController extends Controller
             return response()->json(['error' => 'API key no reconocida'], 401);
         }
 
-        if ($system->status !== 'active') {
-            $system->update([
-                'status'     => 'active',
-                'last_seen'  => now(),
-                'ip_address' => $request->ip(),
-            ]);
-        }
+        $system->update(['status' => 'active', 'last_seen' => now(), 'ip_address' => $request->ip()]);
 
         $data = $request->all();
 
-        RawLog::create([
-            'source_system' => $data['source_system'] ?? 'unknown',
-            'source_ip'     => $data['source_ip'] ?? $request->ip(),
-            'username'      => $data['username'] ?? null,
-            'event_type'    => $data['event_type'] ?? 'generic_event',
-            'raw_data'      => $data,
-            'created_at'    => isset($data['agent_timestamp'])
-                                ? \Carbon\Carbon::parse($data['agent_timestamp'])
-                                : now(),
-        ]);
-
-        // Reenviar evento al collector para que siga el pipeline completo
-        // (collector → normalizer → correlator → alertas)
+        // El collector persiste los eventos en raw_logs; aqui solo reenviamos el batch
         try {
             Http::timeout(3)->post('http://localhost:5000/log', $data);
         } catch (\Exception $e) {

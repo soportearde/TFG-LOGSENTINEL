@@ -557,6 +557,7 @@ def normalize(payload: dict) -> dict:
         "country":           payload.get("country"),
         "asn":               payload.get("asn"),
         "city":              payload.get("city"),
+        "metadata":        payload.get("metadata"),
     }
 
 

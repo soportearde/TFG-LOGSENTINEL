@@ -8,7 +8,7 @@ class CorrelationRule extends Model
 {
     protected $connection = 'alerts_db';
     protected $table = 'correlation_rules';
-    public $timestamps = false;
+    public $timestamps = true;
 
     protected $fillable = [
         'rule_name',

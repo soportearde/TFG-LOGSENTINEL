@@ -81,7 +81,8 @@ class ConnectedSystemController extends Controller
      */
     public function installCommand(ConnectedSystem $connectedSystem, Request $request)
     {
-        $baseUrl = $request->query('base_url', 'https://logsentinel.cgerioja.org');
+        // Por defecto usamos el host desde el que se sirve la API actual
+        $baseUrl = $request->query('base_url', $request->getSchemeAndHttpHost());
 
         return response()->json([
             'system_name'     => $connectedSystem->system_name,
@@ -103,15 +104,30 @@ class ConnectedSystemController extends Controller
 
         $content = file_get_contents($pluginPath);
 
-        $content = str_replace('__API_KEY__', $connectedSystem->api_key, $content);
-        $content = str_replace('__ENDPOINT__', 'https://logsentinel.cgerioja.org/api/log', $content);
+        $baseUrl = $request->query('base_url', $request->getSchemeAndHttpHost());
+        $endpoint = rtrim($baseUrl, '/') . '/api/log';
 
-        $safeName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $connectedSystem->system_name);
-        $filename = "logsentinel-wp-{$safeName}.php";
+        $content = str_replace('__API_KEY__', addslashes($connectedSystem->api_key), $content);
+        $content = str_replace('__ENDPOINT__', $endpoint, $content);
 
-        return response($content, 200, [
-            'Content-Type'        => 'application/octet-stream',
-            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        $safeName  = preg_replace('/[^a-zA-Z0-9_-]/', '_', $connectedSystem->system_name);
+        $folder    = "logsentinel-wp-{$safeName}";
+        $zipPath   = tempnam(sys_get_temp_dir(), 'lsplg_') . '.zip';
+
+        $zip = new \ZipArchive();
+        if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            return response()->json(['error' => 'No se pudo generar el ZIP'], 500);
+        }
+        $zip->addFromString("{$folder}/logsentinel-agent.php", $content);
+        $zip->close();
+
+        $zipBytes = file_get_contents($zipPath);
+        @unlink($zipPath);
+
+        return response($zipBytes, 200, [
+            'Content-Type'        => 'application/zip',
+            'Content-Disposition' => "attachment; filename=\"{$folder}.zip\"",
+            'Content-Length'      => (string) strlen($zipBytes),
         ]);
     }
 
@@ -122,7 +138,7 @@ class ConnectedSystemController extends Controller
     {
         $connectedSystem->update([
             'api_key' => ConnectedSystem::generateApiKey(),
-            'status'  => 'pending',
+            'status'  => 'pending', // vuelve a pendiente porque la key cambió
         ]);
 
         return response()->json($connectedSystem);

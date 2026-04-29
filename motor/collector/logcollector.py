@@ -1,4 +1,3 @@
-import os
 #!/usr/bin/env python3
 
 import json
@@ -33,7 +32,7 @@ pg = psycopg2.connect(
     port=5432,
     database="log_collector",
     user="postgres",
-    password=os.getenv("POSTGRES_PASSWORD", "CHANGE_ME")
+    password="NuevaPasswordSegura!"
 )
 
 pg_cursor = pg.cursor()

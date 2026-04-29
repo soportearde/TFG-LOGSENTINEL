@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnDestroy } from '@angular/core';
+import { Component, inject, signal, computed, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
@@ -14,7 +14,7 @@ import { Alert, PaginatedResponse } from '../../core/models';
   templateUrl: './alerts.html',
   styleUrl: './alerts.scss'
 })
-export class AlertsPage implements OnDestroy {
+export class AlertsPage implements OnInit, OnDestroy {
   private svc    = inject(AlertService);
   private cache  = inject(CacheService);
   private router = inject(Router);
@@ -38,6 +38,16 @@ export class AlertsPage implements OnDestroy {
     this.search$.pipe(debounceTime(400), takeUntil(this.destroy$)).subscribe(() => {
       this.applyFilters();
     });
+  }
+
+  ngOnInit() {
+    if (!this.defaultResult()) {
+      this.loading.set(true);
+      this.svc.list({ page: 1 }).pipe(takeUntil(this.destroy$)).subscribe({
+        next: r  => { this.cache.set('alerts_default', r); this.loading.set(false); },
+        error: () => { this.error.set('Error al cargar alertas.'); this.loading.set(false); }
+      });
+    }
   }
 
   ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }

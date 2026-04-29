@@ -53,3 +53,25 @@ Thumbs.db
 .claude/
 .sass-cache/
 coverage/
+
+# Despliegue local
+backend/public/agent/
+backend/paco
+
+# Caché y compilados
+__pycache__/
+*.pyc
+*.bak
+node_modules/
+vendor/
+dist/
+.angular/
+.env
+.env.local
+
+# Storage de runtime
+backend/storage/logs/
+backend/storage/framework/cache/
+backend/storage/framework/sessions/
+backend/storage/framework/views/
+backend/bootstrap/cache/
