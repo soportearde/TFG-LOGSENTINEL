@@ -90,14 +90,32 @@ systemctl start  auditd > /dev/null 2>&1 || true
 # Configurar fail2ban para SSH (bloquea bots de internet a nivel de firewall,
 # evitando que el ruido de fuerza bruta inunde el SIEM)
 cat > /etc/fail2ban/jail.d/sshd.local << 'F2BCONF'
+[DEFAULT]
+# Tu IP de casa nunca se banea, evita autobloqueos accidentales
+ignoreip = 127.0.0.1/8 ::1
+# Resuelve nombres por DNS solo si es necesario
+usedns   = warn
+
 [sshd]
 enabled  = true
 port     = ssh
 filter   = sshd
 backend  = systemd
-maxretry = 3
-findtime = 300
-bantime  = 3600
+# 2 fallos en 30 min ya es ataque (no hay typos legítimos repetidos así)
+maxretry = 2
+findtime = 1800
+# Ban de 24h
+bantime  = 86400
+
+# Reincidentes: si una IP se banea 3 veces, se banea 1 semana entera
+[recidive]
+enabled  = true
+filter   = recidive
+logpath  = /var/log/fail2ban.log
+banaction = iptables-allports
+bantime   = 604800
+findtime  = 86400
+maxretry  = 3
 F2BCONF
 systemctl enable fail2ban > /dev/null 2>&1 || true
 systemctl restart fail2ban > /dev/null 2>&1 || true
