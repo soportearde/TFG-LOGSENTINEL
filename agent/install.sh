@@ -80,12 +80,27 @@ echo ""
 # ─────────────────────────────────────────────────────────────
 echo -e "${GREEN}[1/5] Instalando dependencias...${NC}"
 apt-get update -qq 2>&1 | grep -v "^W:" || true   # ignorar repos rotos de terceros
-apt-get install -y -qq python3 python3-pip auditd > /dev/null 2>&1
+apt-get install -y -qq python3 python3-pip auditd fail2ban > /dev/null 2>&1
 pip3 install requests --break-system-packages -q 2>/dev/null || pip3 install requests -q
 
 # Activar auditd (File Guardian lo necesita para vigilar rutas restringidas)
 systemctl enable auditd > /dev/null 2>&1 || true
 systemctl start  auditd > /dev/null 2>&1 || true
+
+# Configurar fail2ban para SSH (bloquea bots de internet a nivel de firewall,
+# evitando que el ruido de fuerza bruta inunde el SIEM)
+cat > /etc/fail2ban/jail.d/sshd.local << 'F2BCONF'
+[sshd]
+enabled  = true
+port     = ssh
+filter   = sshd
+backend  = systemd
+maxretry = 3
+findtime = 300
+bantime  = 3600
+F2BCONF
+systemctl enable fail2ban > /dev/null 2>&1 || true
+systemctl restart fail2ban > /dev/null 2>&1 || true
 
 # ─────────────────────────────────────────────────────────────
 # 2. CREAR DIRECTORIOS
