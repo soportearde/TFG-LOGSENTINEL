@@ -30,6 +30,8 @@ class RawLogController extends Controller
 
         $system->update(['status' => 'active', 'last_seen' => now(), 'ip_address' => $request->ip()]);
 
+        $system->update(['last_seen' => now(), 'ip_address' => $request->ip()]);
+
         $data = $request->all();
 
         // El collector persiste los eventos en raw_logs; aqui solo reenviamos el batch
